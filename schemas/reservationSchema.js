@@ -11,8 +11,8 @@ const ReservationSchema = new Schema({
         required: true
     },
 
-    guestCount: {
-        type: Number,
+    guestsCount: {
+        type: String,
         required: true
     },
     comment: {

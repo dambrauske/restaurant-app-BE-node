@@ -2,7 +2,7 @@ const { Types } = require("mongoose");
 const { sendResponse } = require('../helperFunctions');
 const { errorLogging } = require("../helperFunctions");
 
-const reservationDb = require(/schemas/ReservationSchema)
+const reservationDb = require('../schemas/reservationSchema')
 
 const times = ['11:00',
 '11:30',
@@ -28,17 +28,16 @@ const times = ['11:00',
 module.exports = {
 
     addReservation: async (req, res) => {
-        const { date, timeFrom, timeTo, guestCount, comment, name, phone } = req.body;
+        const { date, time, guestsCount, comment, name, phone } = req.body;
 
         console.log("data", req.body);
 
         const newReservation = new reservationDb({
             _id: new Types.ObjectId(),
             date,
-            timeFrom,
-            timeTo,
-            guestCount,
-            comment: comment | undefined,
+            time,
+            guestsCount,
+            comment: comment,
             name,
             phone,
         })
@@ -47,9 +46,9 @@ module.exports = {
 
         try {
             await newReservation.save();
-            const reservations = await reservationDb.findAll();
+            const reservations = await reservationDb.find();
             console.log(reservations);
-            sendResponse(res, false, "Reservation saved", null)
+            sendResponse(res, false, "Reservation saved", reservations)
         } catch (error) {
             errorLogging(error);
             sendResponse(res, true, "An error occured", null)
