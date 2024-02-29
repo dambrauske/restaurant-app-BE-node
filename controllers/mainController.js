@@ -1,190 +1,10 @@
 const { Types } = require("mongoose");
 const { sendResponse } = require("../helperFunctions");
 const { errorLogging } = require("../helperFunctions");
+const reservationsDb = require("../schemas/reservationSchema");
+const tablesDb = require("../schemas/tablesSchema");
 
 const reservationDb = require("../schemas/reservationSchema");
-
-const times = [
-  "11:00",
-  "11:30",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-  "19:30",
-  "20:00",
-];
-
-const tables = [
-  {
-    tableNo: 1,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 6,
-  },
-  {
-    tableNo: 2,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 6,
-  },
-  {
-    tableNo: 3,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 4,
-  },
-  {
-    tableNo: 4,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 4,
-  },
-  {
-    tableNo: 5,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 2,
-  },
-  {
-    tableNo: 6,
-    times: {
-      "11:00": "available",
-      "11:30": "available",
-      "11:30": "available",
-      "12:00": "available",
-      "12:30": "available",
-      "13:00": "available",
-      "13:30": "available",
-      "14:00": "available",
-      "14:30": "available",
-      "15:00": "available",
-      "15:30": "available",
-      "16:00": "available",
-      "16:30": "available",
-      "17:00": "available",
-      "17:30": "available",
-      "18:00": "available",
-      "18:30": "available",
-      "19:00": "available",
-      "19:30": "available",
-      "20:00": "available",
-    },
-    maxGuestCount: 2,
-  },
-];
 
 const restaurant = {
   name: "El Restaurant",
@@ -309,49 +129,131 @@ const restaurant = {
   ],
 };
 
+const times = [
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
+];
+
 module.exports = {
+  getTimesOnDate: async (req, res) => {
+    const { date, guestsCount } = req.body;
+
+    try {
+      const tablesCollection = await tablesDb.find();
+
+      const availableTimesAndTables = [];
+
+      tablesCollection.forEach((table) => {
+        if (table.maxGuestCount >= guestsCount) {
+          // If there are no reservations, all times are available
+          if (table.reservations.length === 0) {
+            times.forEach((time) => {
+              availableTimesAndTables.push({
+                time,
+                tableNo: table.tableNo,
+                tableId: table._id,
+              });
+            });
+            // If there are reservations: check the date and filter out busy times on that date
+          } else {
+            table.reservations.forEach((reservation) => {
+              if (reservation.date === date) {
+                const busyTime = reservation.time;
+                const availableTimes = times.filter(
+                  (time) => time !== busyTime
+                );
+                availableTimes.forEach((time) => {
+                  availableTablesAndTimesArray.push({
+                    time,
+                    tableNo: table.tableNo,
+                    tableId: table._id,
+                  });
+                });
+              }
+            });
+            // Add remaining times for this table
+            times.forEach((time) => {
+              availableTimesAndTables.push({
+                time,
+                tableNo: table.tableNo,
+                tableId: table._id,
+              });
+            });
+          }
+        }
+      });
+
+      console.log("availableTimesAndTables", availableTimesAndTables);
+
+      sendResponse(res, false, "available times and tables", availableTimesAndTables);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
   getRestaurantInfo: async (req, res) => {
+    console.log("get restaurant started");
     sendResponse(res, false, "Restaurant info", restaurant);
   },
 
   addReservation: async (req, res) => {
-    const { date, time, guestsCount, comment, name, phone } = req.body;
-
-    console.log("data", req.body);
-
-    const newReservation = new reservationDb({
-      _id: new Types.ObjectId(),
-      date,
-      time,
-      guestsCount,
-      comment: comment,
-      name,
-      phone,
-    });
-
-    console.log("newReservation", newReservation);
+    const { date, time, tableNo, guestsCount, comment, name, phone } = req.body;
 
     try {
+      const selectedTable = await tablesDb.findOne({ tableNo: tableNo });
+      console.log("selectedTable", selectedTable);
+      const selectedTableId = selectedTable._id;
+
+      console.log("data", req.body);
+
+      const newReservation = new reservationDb({
+        _id: new Types.ObjectId(),
+        date,
+        time,
+        tableId: selectedTableId,
+        guestsCount,
+        comment: comment,
+        name,
+        phone,
+      });
+
+      console.log("newReservation", newReservation);
+
       await newReservation.save();
+
+      await tablesDb.findByIdAndUpdate(
+        { _id: tableId },
+        { $push: { reservations: newReservation._id } }
+      );
+
       const reservations = await reservationDb.find();
       console.log(reservations);
       sendResponse(res, false, "Reservation saved", reservations);
     } catch (error) {
-      errorLogging(error);
+      console.log(error);
       sendResponse(res, true, "An error occured", null);
     }
   },
 
-  getAvailableTimes: async (req, res) => {
+  getAvailableavailableTimes: async (req, res) => {
     const { date } = req.body;
 
     const reservationsOnDate = await reservationDb.find({ date: date });
+    console.log("reservationsOnDate", reservationsOnDate);
 
     if (!reservationsOnDate) {
-      sendResponse(res, false, "Available times", times);
+      sendResponse(res, false, "Available availableTimes", availableTimes);
     } else {
       console.log(reservationsOnDate);
-      sendResponse(res, false, "Available times", times);
+      sendResponse(res, false, "Available availableTimes", availableTimes);
     }
   },
 };

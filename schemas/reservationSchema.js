@@ -27,6 +27,10 @@ const ReservationSchema = new Schema({
         type: String,
         required: true
     },
+    tableId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Tables',
+    }
 
 })
 
