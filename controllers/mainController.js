@@ -190,12 +190,15 @@ module.exports = {
           }
         }
       });
-
-      console.log("availableTimesAndTables", availableTimesAndTables);
-
-      sendResponse(res, false, "available times and tables", availableTimesAndTables);
+      sendResponse(
+        res,
+        false,
+        "available times and tables",
+        availableTimesAndTables
+      );
     } catch (error) {
       console.log(error);
+      sendResponse(res, true, "an error occured", null);
     }
   },
 
